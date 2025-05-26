@@ -9,6 +9,14 @@ class Quest < ApplicationRecord
   validates :longitude, presence: true
   validates :boundary, presence: true
 
+  scope :active, -> { where(status: 'active') }
+
+  # Find quests that contain a user's current location
+  scope :near_user, ->(user) {
+    return none unless user.latitude.present? && user.longitude.present?
+    all.select { |quest| quest.contains_point?(user.latitude, user.longitude) }
+  }
+
   # Check if a point (latitude, longitude) is within the quest's boundary
   def contains_point?(lat, lng)
     return false unless boundary.present?
