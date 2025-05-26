@@ -35,6 +35,7 @@ gem "bootsnap", require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 
+gem 'byebug'
 # Geospatial functionality
 gem 'rgeo', '~> 3.0'
 gem 'rgeo-geojson'

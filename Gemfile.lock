@@ -96,6 +96,7 @@ GEM
     bootsnap (1.18.6)
       msgpack (~> 1.2)
     builder (3.3.0)
+    byebug (11.1.3)
     case_transform (0.2)
       activesupport
     cgi (0.4.2)
@@ -344,6 +345,7 @@ DEPENDENCIES
   active_model_serializers
   annotate
   bootsnap
+  byebug
   debug
   devise
   devise-jwt

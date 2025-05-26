@@ -1,45 +1,64 @@
 module Api
   module V1
     class QuestsController < ApplicationController
+      before_action :set_quest, only: [:show, :join]
+
+      def index
+        @quests = Quest.active
+        render json: @quests
+      end
+
+      def show
+        render json: @quest
+      end
+
       def nearby
-        user = current_user
-        return render json: { error: 'User location not available' }, status: :bad_request unless user.latitude && user.longitude
-
-        # Find quests that contain the user's location
-        quests = Quest.containing_point(user.latitude, user.longitude)
-                     .where(status: 'active')
-                     .includes(:quest_participants)
-
-        render json: {
-          status: 'success',
-          quests: quests.map { |quest| 
-            {
-              id: quest.id,
-              name: quest.name,
-              description: quest.description,
-              participant_count: quest.quest_participants.count,
-              is_joined: quest.quest_participants.exists?(user_id: user.id)
+        user = User.find_by(id: params[:user_id])
+        unless user&.latitude && user&.longitude
+          return render json: { error: 'User location not available' }, status: :bad_request
+        end
+        @quests = Quest.active.near_user(user)
+        if @quests.any?
+          render json: {
+            status: 'success',
+            quests: @quests.map { |quest| 
+              quest.as_json.merge(
+                is_joined: quest.users.include?(user)
+              )
             }
           }
-        }
+        else
+          render json: {
+            status: 'success',
+            message: 'No quests found in your area',
+            quests: []
+          }
+        end
       end
 
       def join
-        quest = Quest.find(params[:id])
-        
-        # Check if user is within quest boundary
-        unless quest.contains_point?(current_user.latitude, current_user.longitude)
-          return render json: { error: 'You must be within the quest area to join' }, status: :forbidden
+        user = User.find_by(id: params[:user_id])
+        unless user&.latitude && user&.longitude
+          return render json: { error: 'User location not available' }, status: :bad_request
         end
-
-        # Create participation record
-        participation = quest.quest_participants.create(user: current_user, status: 'active')
-        
-        if participation.persisted?
-          render json: { status: 'success', message: 'Successfully joined quest' }
+        unless @quest.contains_point?(user.latitude, user.longitude)
+          return render json: { error: 'You must be within the quest boundary to join' }, status: :forbidden
+        end
+        if @quest.users.include?(user)
+          return render json: { error: 'You have already joined this quest' }, status: :unprocessable_entity
+        end
+        @quest_participant = @quest.quest_participants.build(user: user, status: 'active')
+        if @quest_participant.save
+          render json: { message: 'Successfully joined the quest' }
         else
-          render json: { status: 'error', message: participation.errors.full_messages }, status: :unprocessable_entity
+          render json: { error: @quest_participant.errors.full_messages }, status: :unprocessable_entity
         end
+      end
+
+      private
+
+      def set_quest
+        @quest = Quest.find(params[:id])
       end
     end
   end
