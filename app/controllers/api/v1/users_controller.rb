@@ -1,16 +1,31 @@
 module Api
   module V1
     class UsersController < ApplicationController
+      def show
+        @user = User.find(params[:id])
+        render json: @user
+      end
+
       def update_location
-        if current_user.update(location_params)
-          render json: { 
-            status: 'success',
-            latitude: current_user.latitude,
-            longitude: current_user.longitude
-          }
+        @user = User.find(params[:id])
+        if @user.update_location(params[:latitude], params[:longitude])
+          render json: { message: 'Location updated successfully' }
         else
-          render json: { status: 'error', message: current_user.errors.full_messages }, status: :unprocessable_entity
+          render json: { error: 'Failed to update location' }, status: :unprocessable_entity
         end
+      end
+
+      def joined_quests
+        @user = User.find(params[:id])
+        @quests = @user.quests.active
+        render json: {
+          status: 'success',
+          quests: @quests.map { |quest| 
+            quest.as_json.merge(
+              joined_at: quest.quest_participants.find_by(user: @user).created_at
+            )
+          }
+        }
       end
 
       private

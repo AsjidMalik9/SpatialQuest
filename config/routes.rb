@@ -4,6 +4,7 @@ Rails.application.routes.draw do
       resources :users do
         member do
           patch :update_location
+          get :joined_quests
         end
       end
       resources :quests do
