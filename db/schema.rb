@@ -12,7 +12,6 @@
 
 ActiveRecord::Schema[7.1].define(version: 2025_05_26_112531) do
   create_table "assets", force: :cascade do |t|
-    t.integer "quest_id", null: false
     t.integer "user_id", null: false
     t.text "content"
     t.datetime "created_at", null: false
@@ -23,8 +22,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_26_112531) do
     t.string "status", default: "available"
     t.datetime "collected_at"
     t.datetime "placed_at"
-    t.index ["quest_id", "latitude", "longitude"], name: "index_assets_on_quest_id_and_latitude_and_longitude", unique: true
-    t.index ["quest_id"], name: "index_assets_on_quest_id"
+    t.index ["latitude", "longitude"], name: "index_assets_on_quest_id_and_latitude_and_longitude", unique: true
     t.index ["user_id"], name: "index_assets_on_user_id"
   end
 
@@ -78,7 +76,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_26_112531) do
     t.float "longitude"
   end
 
-  add_foreign_key "assets", "quests"
   add_foreign_key "assets", "users"
   add_foreign_key "quest_assets", "assets"
   add_foreign_key "quest_assets", "quests"
