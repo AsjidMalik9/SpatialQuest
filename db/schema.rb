@@ -39,7 +39,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_26_112531) do
     t.datetime "updated_at", null: false
     t.index ["asset_id"], name: "index_quest_assets_on_asset_id"
     t.index ["collected_by_id"], name: "index_quest_assets_on_collected_by_id"
-    t.index ["quest_id", "latitude", "longitude"], name: "index_quest_assets_on_quest_id_and_latitude_and_longitude", unique: true
+    t.index ["quest_id", "latitude", "longitude"], name: "index_quest_assets_on_quest_and_location_when_available", unique: true, where: "status = 'available'"
     t.index ["quest_id"], name: "index_quest_assets_on_quest_id"
   end
 

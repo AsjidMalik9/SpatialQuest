@@ -1,7 +1,7 @@
 module Api
   module V1
     class QuestsController < ApplicationController
-      before_action :set_quest, only: [:show, :join]
+      before_action :set_quest, only: [:show, :join, :leave, :quest_assets]
 
       def index
         if params[:lat].present? && params[:lon].present?
@@ -26,6 +26,33 @@ module Api
 
       def show
         render json: @quest
+      end
+
+      def quest_assets
+        @quest_assets = @quest.quest_assets
+        render json: {
+          status: 'success',
+          quest_name: @quest.name,
+          total_assets: @quest_assets.count,
+          available_assets: @quest_assets.available.count,
+          collected_assets: @quest_assets.collected.count,
+          placed_assets: @quest_assets.placed.count,
+          assets: @quest_assets.map { |quest_asset|
+            {
+              id: quest_asset.asset_id,
+              name: quest_asset.asset.name,
+              content: quest_asset.asset.content,
+              latitude: quest_asset.latitude,
+              longitude: quest_asset.longitude,
+              status: quest_asset.status,
+              hint: quest_asset.hint,
+              quest_specific_content: quest_asset.quest_specific_content,
+              collected_by: quest_asset.collected_by&.email,
+              collected_at: quest_asset.collected_at,
+              placed_at: quest_asset.placed_at
+            }
+          }
+        }
       end
 
       def nearby
@@ -68,6 +95,17 @@ module Api
           render json: { message: 'Successfully joined the quest' }
         else
           render json: { error: @quest_participant.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
+      def leave
+        user = User.find_by(id: params[:user_id])
+        @quest_participant = @quest.quest_participants.find_by(user: user)
+        
+        if @quest_participant&.leave!
+          render json: { message: 'Successfully left the quest' }
+        else
+          render json: { error: 'Failed to leave the quest' }, status: :unprocessable_entity
         end
       end
 

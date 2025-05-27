@@ -13,6 +13,14 @@ Rails.application.routes.draw do
         end
         member do
           post :join
+          delete :leave
+          get :quest_assets
+        end
+      end
+      resources :assets do
+        member do
+          post :collect
+          post :place
         end
       end
     end
