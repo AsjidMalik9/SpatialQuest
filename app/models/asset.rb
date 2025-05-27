@@ -11,25 +11,14 @@ class Asset < ApplicationRecord
     return false unless quest_asset&.status == 'available'
     return false unless quest.contains_point?(quest_asset.latitude, quest_asset.longitude)
     
-    quest_asset.transaction do
-      quest_asset.update!(
-        status: 'collected',
-        collected_by: user,
-        collected_at: Time.current
-      )
-    end
+    quest_asset.collect!(user)
   end
 
   def place_in_quest!(quest)
     quest_asset = quest_assets.find_by(quest: quest)
     return false unless quest_asset&.status == 'collected'
     
-    quest_asset.transaction do
-      quest_asset.update!(
-        status: 'placed',
-        placed_at: Time.current
-      )
-    end
+    quest_asset.place!
   end
 
   def status_in_quest(quest)

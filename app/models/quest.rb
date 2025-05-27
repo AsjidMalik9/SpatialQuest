@@ -1,7 +1,8 @@
 class Quest < ApplicationRecord
   has_many :quest_participants, dependent: :destroy
   has_many :users, through: :quest_participants
-  has_many :assets, dependent: :destroy
+  has_many :quest_assets, dependent: :destroy
+  has_many :assets, through: :quest_assets
 
   validates :name, presence: true
   validates :status, presence: true
@@ -10,6 +11,7 @@ class Quest < ApplicationRecord
   validates :boundary, presence: true
 
   scope :active, -> { where(status: 'active') }
+  scope :completed, -> { where(status: 'completed') }
 
   # Find quests that contain a user's current location
   scope :near_user, ->(user) {
@@ -33,6 +35,27 @@ class Quest < ApplicationRecord
   scope :containing_point, ->(lat, lng) {
     all.select { |quest| quest.contains_point?(lat, lng) }
   }
+
+  def check_completion!
+    return if status == 'completed'
+    
+    if all_assets_collected?
+      update!(status: 'completed')
+      quest_participants.active.each(&:complete!)
+    end
+  end
+
+  def all_assets_collected?
+    quest_assets.available.none?
+  end
+
+  def user_collection_stats(user)
+    {
+      total_assets: quest_assets.count,
+      collected_by_user: quest_assets.where(collected_by: user).count,
+      remaining_assets: quest_assets.available.count
+    }
+  end
 
   private
 
