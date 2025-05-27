@@ -5,25 +5,19 @@ class User < ApplicationRecord
 
   validates :email, presence: true, uniqueness: true
 
-  serialize :current_location, JSON
-
   def update_location(latitude, longitude)
-    update(current_location: {
-      latitude: latitude,
-      longitude: longitude,
-      updated_at: Time.current
-    })
+    update(latitude: latitude, longitude: longitude)
   end
 
   def current_latitude
-    current_location&.dig('latitude')
+    latitude
   end
 
   def current_longitude
-    current_location&.dig('longitude')
+    longitude
   end
 
   def location_updated_at
-    current_location&.dig('updated_at')
+    updated_at
   end
 end
