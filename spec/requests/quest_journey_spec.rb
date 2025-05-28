@@ -88,8 +88,11 @@ RSpec.describe "Quest Journey", type: :request do
     expect(JSON.parse(response.body)["error"]).to eq("You must be closer to the asset to collect it")
 
     # 4. Collect first asset from nearby
-    # Update user location to be close to the asset
-    user.update_location(first_asset.latitude, first_asset.longitude)
+    # Update user location to be very close to the asset (within 100 meters)
+    user.update_location(
+      first_asset.latitude + 0.0001,  # About 10 meters away
+      first_asset.longitude + 0.0001
+    )
     post "/api/v1/assets/#{first_asset.asset_id}/collect", params: {
       user_id: user.id,
       quest_id: quest.id
@@ -131,8 +134,11 @@ RSpec.describe "Quest Journey", type: :request do
     expect(JSON.parse(response.body)["error"]).to eq("You must be closer to the asset to collect it")
 
     # 7. Collect second asset from nearby
-    # Update user location to be close to the asset
-    user.update_location(second_asset.latitude, second_asset.longitude)
+    # Update user location to be very close to the asset (within 100 meters)
+    user.update_location(
+      second_asset.latitude + 0.0001,  # About 10 meters away
+      second_asset.longitude + 0.0001
+    )
     post "/api/v1/assets/#{second_asset.asset_id}/collect", params: {
       user_id: user.id,
       quest_id: quest.id

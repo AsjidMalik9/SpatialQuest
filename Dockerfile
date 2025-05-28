@@ -4,10 +4,8 @@ FROM ruby:2.7.5-bullseye
 # Install system dependencies
 RUN apt-get update -qq && apt-get install -y \
     build-essential \
-    libpq-dev \
     nodejs \
     npm \
-    postgresql-client \
     sqlite3 \
     libsqlite3-dev \
     pkg-config \
@@ -34,6 +32,9 @@ RUN bundle install --jobs 4 --retry 3
 
 # Copy the rest of the application
 COPY . .
+
+# Initialize RSpec
+RUN bundle exec rails generate rspec:install
 
 # Add a script to be executed every time the container starts
 COPY entrypoint.sh /usr/bin/
