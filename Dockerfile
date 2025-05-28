@@ -1,59 +1,44 @@
-# syntax = docker/dockerfile:1
+# Use Ruby 2.7.5-bullseye as the base image (newer than buster)
+FROM ruby:2.7.5-bullseye
 
-# Make sure RUBY_VERSION matches the Ruby version in .ruby-version and Gemfile
-ARG RUBY_VERSION=2.7.5
-FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim as base
+# Install system dependencies
+RUN apt-get update -qq && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    nodejs \
+    npm \
+    postgresql-client \
+    sqlite3 \
+    libsqlite3-dev \
+    pkg-config \
+    libxml2-dev \
+    libxslt1-dev
 
-# Rails app lives here
-WORKDIR /rails
+# Install yarn
+RUN npm install -g yarn
 
-# Set production environment
-ENV RAILS_ENV="production" \
-    BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+# Set working directory
+WORKDIR /app
 
-
-# Throw-away build stage to reduce size of final image
-FROM base as build
-
-# Install packages needed to build gems
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev libvips pkg-config
-
-# Install application gems
+# Copy Gemfile and Gemfile.lock
 COPY Gemfile Gemfile.lock ./
-RUN bundle install && \
-    rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
-    bundle exec bootsnap precompile --gemfile
 
-# Copy application code
+# Install specific bundler version
+RUN gem install bundler:2.4.22
+
+# Configure bundler to use ruby platform for nokogiri
+RUN bundle config set force_ruby_platform true
+
+# Install gems with specific platform for nokogiri
+RUN bundle install --jobs 4 --retry 3
+
+# Copy the rest of the application
 COPY . .
 
-# Precompile bootsnap code for faster boot times
-RUN bundle exec bootsnap precompile app/ lib/
+# Add a script to be executed every time the container starts
+COPY entrypoint.sh /usr/bin/
+RUN chmod +x /usr/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
 
-
-# Final stage for app image
-FROM base
-
-# Install packages needed for deployment
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libvips postgresql-client && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
-
-# Copy built artifacts: gems, application
-COPY --from=build /usr/local/bundle /usr/local/bundle
-COPY --from=build /rails /rails
-
-# Run and own only the runtime files as a non-root user for security
-RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp
-USER rails:rails
-
-# Entrypoint prepares the database.
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
-
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD ["./bin/rails", "server"]
+# Start the main process
+CMD ["rails", "server", "-b", "0.0.0.0"]

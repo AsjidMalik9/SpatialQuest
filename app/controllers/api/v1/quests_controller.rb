@@ -87,9 +87,25 @@ module Api
         unless @quest.contains_point?(user.current_latitude, user.current_longitude)
           return render json: { error: 'You must be within the quest boundary to join' }, status: :forbidden
         end
-        if @quest.users.include?(user)
-          return render json: { error: 'You have already joined this quest' }, status: :unprocessable_entity
+
+        # Check if user has already participated in this quest
+        existing_participant = @quest.quest_participants.find_by(user: user)
+        
+        if existing_participant
+          if existing_participant.status == 'active'
+            return render json: { error: 'You have already joined this quest' }, status: :unprocessable_entity
+          elsif existing_participant.status == 'left'
+            # Reactivate the participant
+            if existing_participant.reactivate!
+              render json: { message: 'Successfully rejoined the quest' }
+            else
+              render json: { error: existing_participant.errors.full_messages }, status: :unprocessable_entity
+            end
+            return
+          end
         end
+
+        # Create new participant
         @quest_participant = @quest.quest_participants.build(user: user, status: 'active')
         if @quest_participant.save
           render json: { message: 'Successfully joined the quest' }
