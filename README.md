@@ -217,6 +217,48 @@ docker-compose exec web bundle exec rails db:migrate
 docker-compose exec -e RAILS_ENV=test web bundle exec rspec
 ```
 
+### Test Coverage
+
+The application includes comprehensive test coverage to ensure all key features work as expected:
+
+1. **Quest Journey Spec (`spec/requests/quest_journey_spec.rb`)**
+   - Tests the complete happy path of the quest journey
+   - Verifies all key features including:
+     - User joining a quest
+     - Asset collection within proximity
+     - Asset placement within quest boundaries
+     - Quest completion tracking
+     - Location-based interactions
+
+2. **Quest Controller Spec (`spec/controllers/api/v1/quests_controller_spec.rb`)**
+   - Tests individual quest controller actions
+   - Verifies:
+     - Quest creation and management
+     - Quest listing and filtering
+     - Quest participant management
+     - Quest asset management
+     - Error handling and edge cases
+
+3. **Users Controller Spec (`spec/controllers/api/v1/users_controller_spec.rb`)**
+   - Tests user-related functionality
+   - Verifies:
+     - User listing and retrieval
+     - Location updates
+     - Joined quests listing
+     - Error handling for invalid locations
+     - User proximity calculations
+
+4. **Assets Controller Spec (`spec/controllers/api/v1/assets_controller_spec.rb`)**
+   - Tests asset management functionality
+   - Verifies:
+     - Asset collection within proximity
+     - Asset placement within boundaries
+     - Asset status tracking
+     - User's collected assets listing
+     - Error handling for invalid operations
+
+These test suites ensure the reliability and functionality of the core game mechanics and API endpoints.
+
 ### APIs
 
 #### User APIs
@@ -246,13 +288,13 @@ The following endpoints are available for user management:
      - quests: Array of quest objects with their details
      - total_quests: Total number of quests joined
 
-3. `POST /api/v1/users/:id/update_location`
+3. `PATCH /api/v1/users/:id/update_location`
    - Updates a user's current location
    - Required parameters:
      - latitude: User's current latitude
      - longitude: User's current longitude
    ```bash
-   curl --location 'http://localhost:3000/api/v1/users/1/update_location' \
+   curl --location --request PATCH 'http://localhost:3000/api/v1/users/1/update_location' \
    --header 'Content-Type: application/json' \
    --data '{
        "latitude": 37.7749,
@@ -269,8 +311,16 @@ The following endpoints are available for quest management:
 
 1. `GET /api/v1/quests`
    - Lists all available quests
+   - Optional parameters (for filtering by location):
+     - lat: User's current latitude
+     - lon: User's current longitude
+   - Note: If location parameters are not provided, returns all quests (useful for testing)
    ```bash
+   # Get all quests (for testing)
    curl --location 'http://localhost:3000/api/v1/quests'
+
+   # Get quests filtered by location
+   curl --location 'http://localhost:3000/api/v1/quests?latitude=37.7749&longitude=-122.4194'
    ```
    - Returns a JSON array of quests with their details including:
      - id
@@ -331,9 +381,9 @@ The following endpoints are available for quest management:
    - Lists quests near a user's location
    - Required parameters:
      - user_id: ID of the user
-     - radius: Search radius in kilometers (optional, defaults to 5)
+
    ```bash
-   curl --location 'http://localhost:3000/api/v1/quests/nearby?user_id=1&radius=5'
+   curl --location 'http://localhost:3000/api/v1/quests/nearby?user_id=1'
    ```
    - Returns a JSON array of nearby quests with their details
 
