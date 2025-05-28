@@ -29,3 +29,45 @@
 !/storage/.keep
 /tmp/storage/*
 !/tmp/storage/.keep
+
+# Version control
+.git
+.gitignore
+
+# Logs
+log/*
+tmp/*
+!log/.keep
+!tmp/.keep
+
+# Environment variables
+.env
+.env.*
+
+# Database
+db/*.sqlite3
+db/*.sqlite3-journal
+
+# Node modules
+node_modules/
+
+# Test coverage
+coverage/
+
+# Documentation
+doc/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
