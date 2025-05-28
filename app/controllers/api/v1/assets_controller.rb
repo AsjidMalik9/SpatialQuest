@@ -80,6 +80,11 @@ module Api
           return render json: { error: 'Asset not found or not collected by you' }, status: :not_found
         end
 
+        # Verify the new location is within the quest boundary
+        unless quest_asset.quest.contains_point?(params[:latitude], params[:longitude])
+          return render json: { error: 'Cannot place asset outside quest boundary' }, status: :forbidden
+        end
+
         # Update location before placing
         quest_asset.latitude = params[:latitude]
         quest_asset.longitude = params[:longitude]
