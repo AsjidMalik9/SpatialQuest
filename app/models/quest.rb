@@ -27,6 +27,10 @@ class Quest < ApplicationRecord
     polygon = JSON.parse(boundary)
     coordinates = polygon['coordinates'][0]
     
+    # Convert input coordinates to floats
+    lat = lat.to_f
+    lng = lng.to_f
+    
     # Simple point-in-polygon check
     point_in_polygon?(lat, lng, coordinates)
   end
@@ -64,9 +68,19 @@ class Quest < ApplicationRecord
     j = coordinates.length - 1
     
     coordinates.each_with_index do |point, i|
-      if ((point[1] > lat) != (coordinates[j][1] > lat)) &&
-         (lng < (coordinates[j][0] - point[0]) * (lat - point[1]) / 
-         (coordinates[j][1] - point[1]) + point[0])
+      # Convert coordinates to floats
+      point_lng = point[0].to_f
+      point_lat = point[1].to_f
+      next_point_lng = coordinates[j][0].to_f
+      next_point_lat = coordinates[j][1].to_f
+      
+      # Ensure all values are floats for comparison
+      lat = lat.to_f
+      lng = lng.to_f
+      
+      if ((point_lat > lat) != (next_point_lat > lat)) &&
+         (lng < (next_point_lng - point_lng) * (lat - point_lat) / 
+         (next_point_lat - point_lat) + point_lng)
         inside = !inside
       end
       j = i

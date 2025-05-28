@@ -109,6 +109,16 @@ RSpec.describe "Quest Journey", type: :request do
     expect(response).to have_http_status(:success)
     expect(JSON.parse(response.body)["message"]).to eq("Asset placed successfully")
 
+    # Try to place asset outside quest boundary
+    post "/api/v1/assets/#{first_asset.asset_id}/place", params: {
+      user_id: user.id,
+      quest_id: quest.id,
+      latitude: 37.8000,  # Outside the boundary
+      longitude: -122.4000
+    }
+    expect(response).to have_http_status(:forbidden)
+    expect(JSON.parse(response.body)["error"]).to eq("Cannot place asset outside quest boundary")
+
     # 6. Try to collect second asset from far away
     second_asset = quest_assets.last
     # Update user location to be far away
