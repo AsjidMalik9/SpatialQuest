@@ -320,7 +320,7 @@ The following endpoints are available for quest management:
    curl --location 'http://localhost:3000/api/v1/quests'
 
    # Get quests filtered by location
-   curl --location 'http://localhost:3000/api/v1/quests?latitude=37.7749&longitude=-122.4194'
+   curl --location 'http://localhost:3000/api/v1/quests?lat=37.7749&lon=-122.4194'
    ```
    - Returns a JSON array of quests with their details including:
      - id
